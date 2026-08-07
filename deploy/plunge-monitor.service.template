@@ -1,0 +1,35 @@
+[Unit]
+Description=Cold plunge pump monitor
+Documentation=file://__INSTALL_DIR__/README.md
+# The plug lives on the LAN, so don't start before networking is actually up.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+Group=__GROUP__
+WorkingDirectory=__INSTALL_DIR__
+ExecStart=__PYTHON__ __INSTALL_DIR__/pump_monitor.py watch
+
+# A pump monitor that quietly dies is worse than none at all, because you
+# believe you're covered. Always come back, but don't crash-loop the network.
+Restart=always
+RestartSec=30s
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=plunge-monitor
+
+# Modest hardening. ProtectHome is deliberately left off so the service still
+# works when installed under a home directory.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectControlGroups=true
+ProtectKernelTunables=true
+RestrictSUIDSGID=true
+ReadWritePaths=__INSTALL_DIR__
+
+[Install]
+WantedBy=multi-user.target

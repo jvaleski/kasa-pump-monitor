@@ -1,0 +1,51 @@
+{
+  "_comment": "Copy to pump_config.json and fill in. Any secret can be given inline, or moved to an environment variable by replacing the key with <key>_env, e.g. \"password_env\": \"KASA_PASSWORD\".",
+
+  "device": {
+    "ip": "192.168.1.100",
+    "username": "you@example.com",
+    "password_env": "KASA_PASSWORD",
+    "timeout_seconds": 10.0
+  },
+
+  "pump": {
+    "_comment": "running_watts and voltage_reference are written by `pump_monitor.py calibrate`. The alert band is running_watts +/- running_tolerance_pct. At or below stopped_max_watts counts as stopped; between that and the band's floor counts as cavitating.",
+    "_comment_voltage": "Mains voltage moves the pump's draw a few percent through the day, which is not a fault. Set voltage_exponent non-zero to normalize it out; `pump_monitor.py fit-voltage --apply` fits it from real history. 0 disables normalization.",
+    "running_watts": null,
+    "running_tolerance_pct": 10.0,
+    "stopped_max_watts": 5.0,
+    "voltage_reference": null,
+    "voltage_exponent": 0.0
+  },
+
+  "polling": {
+    "_comment": "A state change must repeat for confirm_samples consecutive polls before it alerts, so one bad reading stays quiet.",
+    "interval_seconds": 60.0,
+    "confirm_samples": 3,
+    "unreachable_samples": 3,
+    "recovery_samples": 2
+  },
+
+  "alerts": {
+    "_comment": "cooldown_seconds throttles repeat alerts for an unresolved problem. drift_alert_pct compares the 24h median against the calibrated draw to catch slow changes that stay inside the band.",
+    "cooldown_seconds": 1800.0,
+    "send_recovery": true,
+    "drift_alert_pct": 4.0,
+    "drift_cooldown_seconds": 86400.0,
+    "channels": [
+      { "type": "log", "enabled": true },
+      { "type": "ntfy", "enabled": false, "min_severity": "critical", "topic": "pick-something-unguessable", "server": "https://ntfy.sh" },
+      { "type": "twilio", "enabled": false, "min_severity": "critical", "account_sid_env": "TWILIO_ACCOUNT_SID", "auth_token_env": "TWILIO_AUTH_TOKEN", "from_number": "", "to_number": "" },
+      { "type": "macos", "enabled": false, "min_severity": "warning" }
+    ]
+  },
+
+  "storage": {
+    "history_file": "pump_history.jsonl",
+    "state_file": "pump_state.json",
+    "log_file": "pump_monitor.log",
+    "retain_days": 30.0,
+    "log_max_mb": 5.0,
+    "log_backups": 3
+  }
+}

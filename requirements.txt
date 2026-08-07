@@ -1,0 +1,11 @@
+# python-kasa 0.8+ requires Python 3.11, which rules it out on Raspberry Pi OS
+# Bullseye (Python 3.9). The marker lets each host resolve what it can run
+# rather than forcing a lowest-common-denominator pin.
+#
+# The difference is not cosmetic. On 0.7.7 the KP125M's Energy module reports
+# current_consumption but leaves voltage and current as None, so PumpConfig.
+# normalize() no-ops and `fit-voltage` has nothing to fit. Power-based
+# alerting is unaffected; only voltage normalization is lost.
+python-kasa>=0.10.0; python_version >= "3.11"
+python-kasa==0.7.7; python_version < "3.11"
+requests>=2.25.0
