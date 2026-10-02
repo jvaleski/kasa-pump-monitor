@@ -95,13 +95,16 @@ calibrate on your Mac and copy `pump_config.json` to the Pi.
 ## Deploying to Linux
 
 ```bash
-scp -r kasa/ pi@plunge-pi:~/plunge-monitor      # includes your calibrated config
-ssh pi@plunge-pi
-cd ~/plunge-monitor && ./deploy/install.sh
+rsync -a --exclude='legacy/' --exclude='__pycache__/' --exclude='.venv/' \
+      ./ pi@YOUR-PI:~/kasa/                    # includes your calibrated config
+ssh pi@YOUR-PI
+cd ~/kasa && ./deploy/install.sh
 ```
 
-`install.sh` creates a virtualenv (Raspberry Pi OS Bookworm marks the system
-Python as externally managed, so pip can't install into it), installs
+`install.sh` creates a virtualenv unconditionally — Raspberry Pi OS Bookworm and
+later mark the system Python as externally managed (PEP 668) so pip refuses to
+install into it, and on older releases a venv is still the right call because it
+pins `python-kasa` independently of anything else on the box. It then installs
 dependencies, `chmod 600`s the config, generates
 `/etc/systemd/system/plunge-monitor.service` with the real paths baked in, then
 enables and starts it. It refuses to install if the config has no calibration,
