@@ -94,11 +94,26 @@ calibrate on your Mac and copy `pump_config.json` to the Pi.
 
 ## Deploying to Linux
 
+Deploy code only. Once the monitor is running, the Pi's `pump_config.json`,
+`pump_history.jsonl` and `pump_state.json` are the source of truth — your
+checkout's copies go stale the moment you recalibrate on the Pi, and copying
+them back over is a silent way to lose the calibration and the history.
+
 ```bash
 rsync -a --exclude='legacy/' --exclude='__pycache__/' --exclude='.venv/' \
-      ./ pi@YOUR-PI:~/kasa/                    # includes your calibrated config
+      --exclude='.git/' --exclude='pump_config.json' \
+      --exclude='pump_history.jsonl' --exclude='pump_state.json' \
+      --exclude='*.log' --exclude='*.log.[0-9]' --exclude='*.bak-*' \
+      ./ pi@YOUR-PI:~/kasa/
 ssh pi@YOUR-PI
 cd ~/kasa && ./deploy/install.sh
+```
+
+**First install only**, to seed the config you calibrated on your laptop
+(calibration describes the appliance, not the host, so this is valid):
+
+```bash
+scp pump_config.json pi@YOUR-PI:~/kasa/      # install.sh will chmod 600 it
 ```
 
 `install.sh` creates a virtualenv unconditionally — Raspberry Pi OS Bookworm and

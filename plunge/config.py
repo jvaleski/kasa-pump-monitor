@@ -2,6 +2,7 @@
 
 import json
 import os
+import stat
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -299,6 +300,16 @@ class Config:
         with open(tmp, "w") as handle:
             json.dump(raw, handle, indent=2)
             handle.write("\n")
+        # Carry the original's mode onto the replacement before the rename.
+        # The temp file is created fresh under the process umask (0644 is
+        # typical), and a rename keeps the *source* file's permissions -- so
+        # without this, every calibrate run silently undoes the chmod 600 that
+        # install.sh applies and leaves the TP-Link password and ntfy topic
+        # world-readable. Fall back to 0600 rather than leaving it at 0644.
+        try:
+            os.chmod(tmp, stat.S_IMODE(os.stat(self.path).st_mode))
+        except OSError:
+            os.chmod(tmp, 0o600)
         tmp.replace(self.path)
         self.pump = pump
 

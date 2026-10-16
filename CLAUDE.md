@@ -149,10 +149,26 @@ from `watch()` broke nothing. `TestWatchStartupWiring` and
 
 ## Deploying
 
+**Deploy code only. The target's `pump_config.json`, `pump_history.jsonl` and
+`pump_state.json` are the source of truth** — they hold the live calibration and
+months of history, and a checkout's copies are almost always stale. Overwriting
+them fails silently: the service restarts on an old band and alerts immediately.
+
 ```bash
 rsync -a --exclude='legacy/' --exclude='__pycache__/' --exclude='.venv/' \
+      --exclude='.git/' --exclude='pump_config.json' \
+      --exclude='pump_history.jsonl' --exclude='pump_state.json' \
+      --exclude='*.log' --exclude='*.log.[0-9]' --exclude='*.bak-*' \
       ./ user@host:~/kasa/
 ssh user@host 'cd ~/kasa && ./deploy/install.sh'
+```
+
+The exclusions are exactly the gitignored runtime files, so if you add another
+one, add it here too. On a **first** install there is no config on the target
+yet, so seed it once, explicitly — `install.sh` chmod 600s it on arrival:
+
+```bash
+scp pump_config.json user@host:~/kasa/
 ```
 
 `install.sh` is idempotent. It builds a venv (PEP 668 makes system pip refuse),
