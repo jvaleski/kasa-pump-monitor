@@ -101,8 +101,8 @@ them back over is a silent way to lose the calibration and the history.
 
 ```bash
 rsync -a --exclude='legacy/' --exclude='__pycache__/' --exclude='.venv/' \
-      --exclude='.git/' --exclude='pump_config.json' \
-      --exclude='pump_history.jsonl' --exclude='pump_state.json' \
+      --exclude='.git/' --exclude='pump_config.json' --exclude='thermo_config.json' \
+      --exclude='pump_history.jsonl' --exclude='pump_state.json' --exclude='thermo_history.jsonl' \
       --exclude='*.log' --exclude='*.log.[0-9]' --exclude='*.bak-*' \
       ./ pi@YOUR-PI:~/kasa/
 ssh pi@YOUR-PI
@@ -270,3 +270,36 @@ only the pump on this plug now, its design didn't fit:
 If you're replacing a cron-driven predecessor, remember to clear its crontab
 entry (`crontab -e`) when you enable the service. Two monitors on one plug
 means duplicate alerts and two divergent histories.
+
+## Thermostat logger (Inkbird ITC-308-WIFI)
+
+A second, separate service, `plunge-thermo`, logs the tub's temperature
+controller once a minute. It records water temperature, the controller's
+settings, whether the chiller or heater is running, and the outdoor
+temperature from Open-Meteo, all to `thermo_history.jsonl`. **It is read-only:
+the client has no write method.** This is phase 1 of a planned scheduler that
+lets the water float when the tub isn't in use and brings it back to 45°F by
+morning. The logged data is what that scheduler's thermal model gets fitted
+from.
+
+```bash
+./thermo.py status                 # read the controller now, plus a 24h summary
+./deploy/install.sh --thermo       # install/start plunge-thermo
+journalctl -u plunge-thermo -f
+```
+
+Config is `thermo_config.json` (gitignored; it holds the Tuya local key). Start
+from `thermo_config.example.json`. The device ID and local key come from
+`python -m tinytuya wizard` once the controller is paired in Smart Life.
+Re-pairing it changes the key.
+
+Controller facts learned the hard way (2026-11-07):
+
+- **Any local write, even of PT or AH, makes the ITC-308-WIFI ignore HD/CD and
+  drive straight to TS**, running the chiller or heater until the water
+  *crosses* TS. Writing TS equal to the current water temperature does not
+  count as reached.
+- **The front-panel COOLING light stayed off while the chiller ran.** Data
+  point 115 (`out` in the history: "0" idle, "1" cooling) is the source of truth.
+- Pairing fails on a network that shares one name across 2.4 and 5 GHz; pair on
+  2.4 GHz only.

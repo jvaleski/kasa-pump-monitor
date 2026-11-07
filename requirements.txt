@@ -9,3 +9,8 @@
 python-kasa>=0.10.0; python_version >= "3.11"
 python-kasa==0.7.7; python_version < "3.11"
 requests>=2.25.0
+
+# Local (LAN) control of the Inkbird ITC-308-WIFI over the Tuya protocol, for
+# the thermostat logger. A deliberate exception to the stdlib + kasa + requests
+# rule: the Tuya local protocol is encrypted and versioned, not worth hand-rolling.
+tinytuya>=1.13.0

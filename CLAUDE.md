@@ -156,8 +156,8 @@ them fails silently: the service restarts on an old band and alerts immediately.
 
 ```bash
 rsync -a --exclude='legacy/' --exclude='__pycache__/' --exclude='.venv/' \
-      --exclude='.git/' --exclude='pump_config.json' \
-      --exclude='pump_history.jsonl' --exclude='pump_state.json' \
+      --exclude='.git/' --exclude='pump_config.json' --exclude='thermo_config.json' \
+      --exclude='pump_history.jsonl' --exclude='pump_state.json' --exclude='thermo_history.jsonl' \
       --exclude='*.log' --exclude='*.log.[0-9]' --exclude='*.bak-*' \
       ./ user@host:~/kasa/
 ssh user@host 'cd ~/kasa && ./deploy/install.sh'
@@ -193,6 +193,17 @@ and copying `pump_config.json` to the target is valid.
 **Retire any predecessor.** Two monitors on one plug means duplicate alerts and
 two divergent histories. Check `crontab -l` on the target.
 
+## Thermostat logger
+
+`thermo.py` / `plunge/inkbird.py` / `plunge/thermo_logger.py` / `plunge/weather.py`
+are a separate, read-only service (`plunge-thermo`) for the Inkbird controller.
+It doesn't touch the pump detector, so the 24/7 assumption above still holds
+for the pump. **Do not add a write method to `InkbirdClient` casually:** any
+write makes the controller run the chiller or heater until the water crosses
+TS (see the README). A test asserts the client has no write path. Deploy with
+`./deploy/install.sh --thermo`; `thermo_config.json` and `thermo_history.jsonl`
+on the Pi are the source of truth, so exclude them from rsync like the pump files.
+
 ## Gotchas
 
 - **Disk is bounded, but only because it's configured to be.** Logs rotate via
@@ -218,7 +229,8 @@ two divergent histories. Check `crontab -l` on the target.
 
 ## Conventions
 
-- Standard library only, beyond `python-kasa` and `requests`.
+- Standard library only, beyond `python-kasa`, `requests`, and `tinytuya` (the
+  thermostat logger only; the Tuya local protocol isn't worth hand-rolling).
 - Comments explain *why*, especially where the code looks wrong but isn't.
   Match that density; don't add narration of what the code plainly does.
 - Errors carry an actionable `hint` where one exists (see `DeviceError`).

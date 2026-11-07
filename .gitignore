@@ -3,6 +3,8 @@
 # and the ntfy topic (which is itself the secret). Never commit it.
 pump_config.json
 power_config.json
+# Holds the Inkbird's Tuya local key.
+thermo_config.json
 
 # The superseded implementation. Kept locally for reference only — its
 # config file contains live credentials. Never publish this directory.
@@ -11,6 +13,7 @@ legacy/
 # --- Runtime data ------------------------------------------------------
 pump_history.jsonl
 pump_state.json
+thermo_history.jsonl
 *.log
 *.log.[0-9]
 .last_*

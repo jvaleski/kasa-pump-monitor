@@ -1,0 +1,33 @@
+{
+  "_comment": "Copy to thermo_config.json (gitignored) and fill in. device_id and local_key come from `python -m tinytuya wizard`. The local key is a secret, and re-pairing the controller in Smart Life changes it. Give it inline or move it to the environment with \"local_key_env\": \"INKBIRD_LOCAL_KEY\".",
+
+  "inkbird": {
+    "device_id": "your-tuya-device-id",
+    "ip": "192.168.1.150",
+    "local_key_env": "INKBIRD_LOCAL_KEY",
+    "version": 3.3,
+    "timeout_seconds": 6.0,
+    "retries": 3,
+    "retry_delay_seconds": 4.0
+  },
+
+  "location": {
+    "_comment": "Where the tub is, for the outdoor temperature (Open-Meteo, no key needed).",
+    "latitude": 40.0,
+    "longitude": -105.0
+  },
+
+  "polling": {
+    "interval_seconds": 60,
+    "weather_refresh_seconds": 900,
+    "unreachable_polls": 5
+  },
+
+  "storage": {
+    "history_file": "thermo_history.jsonl",
+    "log_file": "thermo.log",
+    "retain_days": 120,
+    "log_max_mb": 5.0,
+    "log_backups": 3
+  }
+}
